@@ -2,6 +2,7 @@ import streamlit as st
 from groq import Groq
 
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+
 # ── EMAILS ───────────────────────────────────────────
 EMAILS = [
     {"id": 1, "from": "sarah.kim@techcorp.com", "subject": "Account login not working", "body": "I've been locked out for 2 hours and have a presentation tomorrow. Please help ASAP!"},
@@ -14,7 +15,7 @@ EMAILS = [
 # ── HELPER ───────────────────────────────────────────
 def ask(prompt):
     response = client.chat.completions.create(
-        model="llama3-8b-8192",
+        model="llama-3.1-8b-instant",
         messages=[{"role": "user", "content": prompt}]
     )
     return response.choices[0].message.content.strip()
