@@ -1,7 +1,7 @@
 import streamlit as st
-from google import genai
+from groq import Groq
 
-client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 # ── EMAILS ───────────────────────────────────────────
 EMAILS = [
     {"id": 1, "from": "sarah.kim@techcorp.com", "subject": "Account login not working", "body": "I've been locked out for 2 hours and have a presentation tomorrow. Please help ASAP!"},
@@ -13,9 +13,11 @@ EMAILS = [
 
 # ── HELPER ───────────────────────────────────────────
 def ask(prompt):
-    response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
-    return response.text.strip()
-
+    response = client.chat.completions.create(
+        model="llama3-8b-8192",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return response.choices[0].message.content.strip()
 # ── AGENTS ───────────────────────────────────────────
 def agent_classify(email):
     return ask(f"Classify this email into one of: Customer Inquiry, Scheduling Request, Billing, Technical Support, General. Reply with ONLY the category name.\n\nSubject: {email['subject']}\nBody: {email['body']}")
