@@ -1,7 +1,10 @@
 import streamlit as st
-from groq import Groq
+import google.generativeai as genai
+import json
 
-client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+# ── GOOGLE AI SETUP ───────────────────────────────────
+genai.Client(api_key=st.secrets["AIzaSyB3fWip6m2us8y1QSYEBeONOT_r_R65jHw"])
+model = genai.GenerativeModel("gemini-2.0-flash")
 
 # ── EMAILS ───────────────────────────────────────────
 EMAILS = [
@@ -19,27 +22,36 @@ EMAILS = [
 
 # ── HELPER ───────────────────────────────────────────
 def ask(prompt):
-    response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    return response.choices[0].message.content.strip()
+    response = model.generate_content(prompt)
+    return response.text.strip()
+
 # ── AGENTS ───────────────────────────────────────────
 def agent_classify(email):
-    return ask(f"Classify this email into one of: Customer Inquiry, Scheduling Request, Billing, Technical Support, General. Reply with ONLY the category name.\n\nSubject: {email['subject']}\nBody: {email['body']}")
+    return ask(
+        f"Classify this email into one of: Customer Inquiry, Scheduling Request, Billing, Technical Support, General. "
+        f"Reply with ONLY the category name.\n\nSubject: {email['subject']}\nBody: {email['body']}"
+    )
 
 def agent_priority(email, category):
-    import json
-    raw = ask(f"Assign a priority (High, Medium, or Low) to this email. Reply in JSON only: {{\"priority\": \"...\", \"reason\": \"one sentence\"}}\n\nCategory: {category}\nSubject: {email['subject']}\nBody: {email['body']}")
-    return json.loads(raw.replace("```json","").replace("```","").strip())
+    raw = ask(
+        f"Assign a priority (High, Medium, or Low) to this email. "
+        f'Reply in JSON only: {{"priority": "...", "reason": "one sentence"}}\n\n'
+        f"Category: {category}\nSubject: {email['subject']}\nBody: {email['body']}"
+    )
+    return json.loads(raw.replace("```json", "").replace("```", "").strip())
 
 def agent_draft(email, category, priority):
-    return ask(f"Write a 2-3 sentence professional reply to this email. Reply with the email text only.\n\nCategory: {category}, Priority: {priority}\nSubject: {email['subject']}\nBody: {email['body']}")
+    return ask(
+        f"Write a 2-3 sentence professional reply to this email. Reply with the email text only.\n\n"
+        f"Category: {category}, Priority: {priority}\nSubject: {email['subject']}\nBody: {email['body']}"
+    )
 
 def agent_review(draft, category, priority):
-    import json
-    raw = ask(f"Review this draft reply. Reply in JSON only: {{\"approved\": true or false, \"note\": \"one sentence\"}}\n\nCategory: {category}, Priority: {priority}\nDraft: {draft}")
-    return json.loads(raw.replace("```json","").replace("```","").strip())
+    raw = ask(
+        f'Review this draft reply. Reply in JSON only: {{"approved": true or false, "note": "one sentence"}}\n\n'
+        f"Category: {category}, Priority: {priority}\nDraft: {draft}"
+    )
+    return json.loads(raw.replace("```json", "").replace("```", "").strip())
 
 # ── PIPELINE ─────────────────────────────────────────
 def run_pipeline(email):
