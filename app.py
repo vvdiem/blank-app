@@ -1,9 +1,7 @@
 import streamlit as st
 from google import genai
 
-# ── PASTE YOUR KEY HERE ──────────────────────────────
-client = genai.Client(api_key="AIzaSyBah87S2JtChuPWP5i7fcaETt8ht-vO2bA")
-
+client = genai.Client(api_key=st.secrets["AIzaSyBah87S2JtChuPWP5i7fcaETt8ht-vO2bA"])
 # ── EMAILS ───────────────────────────────────────────
 EMAILS = [
     {"id": 1, "from": "sarah.kim@techcorp.com", "subject": "Account login not working", "body": "I've been locked out for 2 hours and have a presentation tomorrow. Please help ASAP!"},
