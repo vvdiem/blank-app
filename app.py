@@ -10,6 +10,11 @@ EMAILS = [
     {"id": 3, "from": "james.wu@gmail.com", "subject": "Question about enterprise plan", "body": "Hi, I'm evaluating options for my team of 50. Could you send pricing info? No rush."},
     {"id": 4, "from": "ops@clientco.com", "subject": "Schedule Q3 review meeting", "body": "We're available Tuesday or Thursday next week 2-4pm EST. Please confirm and send a calendar invite."},
     {"id": 5, "from": "dev@startup.io", "subject": "API rate limit hit — service degraded", "body": "URGENT: We've been hitting rate limits since 3am. Our service is down for all users. Please help immediately."},
+    {"id": 6, "from": "maria.jones@gmail.com", "subject": "Refund request for duplicate charge", "body": "Hi, I was charged twice for my subscription this month — $49 on the 1st and again on the 3rd. Please refund the duplicate charge as soon as possible."},
+    {"id": 7, "from": "hr@bigcorp.com", "subject": "Onboarding 200 new users next Monday", "body": "We are onboarding our entire new hire cohort next Monday and need 200 accounts created by Friday. Can you confirm this is possible?"},
+    {"id": 8, "from": "t.nguyen@outlook.com", "subject": "How do I export my data?", "body": "Hey, I want to download all my data before cancelling my account. I looked through the settings but couldn't find an export option. Can you point me in the right direction?"},
+    {"id": 9, "from": "security@internalops.io", "subject": "Possible unauthorized access detected", "body": "Our monitoring flagged multiple failed login attempts on account ID 88423 from an unrecognized IP in Eastern Europe. We may have a breach. Please advise immediately."},
+    {"id": 10, "from": "feedback@customerpanel.com", "subject": "Love the product but one suggestion", "body": "Just wanted to say the platform has been great for our team. One thing that would help is a dark mode option — several of us work late and it would reduce eye strain a lot."},
 ]
 
 # ── HELPER ───────────────────────────────────────────
