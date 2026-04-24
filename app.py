@@ -1,12 +1,9 @@
 import streamlit as st
-import google.generativeai as genai
+from groq import Groq
 import json
 
-# ── GOOGLE AI SETUP ───────────────────────────────────
-genai.Client(api_key=st.secrets["AIzaSyB3fWip6m2us8y1QSYEBeONOT_r_R65jHw"])
-model = genai.GenerativeModel("gemini-2.0-flash")
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-# ── EMAILS ───────────────────────────────────────────
 EMAILS = [
     {"id": 1, "from": "sarah.kim@techcorp.com", "subject": "Account login not working", "body": "I've been locked out for 2 hours and have a presentation tomorrow. Please help ASAP!"},
     {"id": 2, "from": "billing@acmecorp.com", "subject": "Invoice #4821 overdue — final notice", "body": "This is a final notice. Invoice for $3,450 is 45 days past due. Pay within 5 days or service will be suspended."},
@@ -20,73 +17,58 @@ EMAILS = [
     {"id": 10, "from": "feedback@customerpanel.com", "subject": "Love the product but one suggestion", "body": "Just wanted to say the platform has been great for our team. One thing that would help is a dark mode option — several of us work late and it would reduce eye strain a lot."},
 ]
 
-# ── HELPER ───────────────────────────────────────────
 def ask(prompt):
-    response = model.generate_content(prompt)
-    return response.text.strip()
-
-# ── AGENTS ───────────────────────────────────────────
-def agent_classify(email):
-    return ask(
-        f"Classify this email into one of: Customer Inquiry, Scheduling Request, Billing, Technical Support, General. "
-        f"Reply with ONLY the category name.\n\nSubject: {email['subject']}\nBody: {email['body']}"
+    response = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[{"role": "user", "content": prompt}]
     )
+    return response.choices[0].message.content.strip()
+
+def agent_classify(email):
+    return ask(f"Classify this email into one of: Customer Inquiry, Scheduling Request, Billing, Technical Support, General. Reply with ONLY the category name.\n\nSubject: {email['subject']}\nBody: {email['body']}")
 
 def agent_priority(email, category):
-    raw = ask(
-        f"Assign a priority (High, Medium, or Low) to this email. "
-        f'Reply in JSON only: {{"priority": "...", "reason": "one sentence"}}\n\n'
-        f"Category: {category}\nSubject: {email['subject']}\nBody: {email['body']}"
-    )
-    return json.loads(raw.replace("```json", "").replace("```", "").strip())
+    raw = ask(f"Assign a priority (High, Medium, or Low) to this email. Reply in JSON only: {{\"priority\": \"...\", \"reason\": \"one sentence\"}}\n\nCategory: {category}\nSubject: {email['subject']}\nBody: {email['body']}")
+    return json.loads(raw.replace("```json","").replace("```","").strip())
 
 def agent_draft(email, category, priority):
-    return ask(
-        f"Write a 2-3 sentence professional reply to this email. Reply with the email text only.\n\n"
-        f"Category: {category}, Priority: {priority}\nSubject: {email['subject']}\nBody: {email['body']}"
-    )
+    return ask(f"Write a 2-3 sentence professional reply to this email. Reply with the email text only.\n\nCategory: {category}, Priority: {priority}\nSubject: {email['subject']}\nBody: {email['body']}")
 
 def agent_review(draft, category, priority):
-    raw = ask(
-        f'Review this draft reply. Reply in JSON only: {{"approved": true or false, "note": "one sentence"}}\n\n'
-        f"Category: {category}, Priority: {priority}\nDraft: {draft}"
-    )
-    return json.loads(raw.replace("```json", "").replace("```", "").strip())
+    raw = ask(f"Review this draft reply. Reply in JSON only: {{\"approved\": true or false, \"note\": \"one sentence\"}}\n\nCategory: {category}, Priority: {priority}\nDraft: {draft}")
+    return json.loads(raw.replace("```json","").replace("```","").strip())
 
-# ── PIPELINE ─────────────────────────────────────────
 def run_pipeline(email):
     results = {}
     with st.status("Running pipeline...", expanded=True) as status:
         st.write("Agent 1 — Classifying...")
         results["category"] = agent_classify(email)
-        st.write(f"→ {results['category']}")
+        st.write(f"-> {results['category']}")
 
         st.write("Agent 2 — Prioritizing...")
         p = agent_priority(email, results["category"])
         results["priority"] = p["priority"]
         results["reason"] = p["reason"]
-        st.write(f"→ {results['priority']}")
+        st.write(f"-> {results['priority']}")
 
         st.write("Agent 3 — Drafting response...")
         results["draft"] = agent_draft(email, results["category"], results["priority"])
-        st.write("→ Draft ready")
+        st.write("-> Draft ready")
 
         st.write("Agent 4 — Reviewing...")
         review = agent_review(results["draft"], results["category"], results["priority"])
         results["approved"] = review["approved"]
         results["review_note"] = review["note"]
-        st.write(f"→ {'Approved' if review['approved'] else 'Needs revision'}")
+        st.write(f"-> {'Approved' if review['approved'] else 'Needs revision'}")
 
         status.update(label="Done!", state="complete")
     return results
 
-# ── SESSION STATE ─────────────────────────────────────
 if "results" not in st.session_state:
     st.session_state.results = {}
 
-# ── UI ────────────────────────────────────────────────
 st.title("Email Triage Assistant")
-st.caption("4-agent pipeline: Classify → Priority → Draft → Review")
+st.caption("4-agent pipeline: Classify -> Priority -> Draft -> Review")
 st.divider()
 
 col1, col2 = st.columns(2)
